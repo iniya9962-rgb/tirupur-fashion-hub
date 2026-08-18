@@ -137,7 +137,6 @@ app.post("/api/vendor-register", (req, res) => {
     console.log("password:", password);
     console.log("categoryData:", categoryData);
 
-    console.log("🧮 SQL:", sql);
     console.log("🧮 Number of values:", [
     shopName,
     ownerName,
@@ -146,28 +145,41 @@ app.post("/api/vendor-register", (req, res) => {
     address,
     categoryData,
     password
-    ].length);
-        (err, result) => {
-            if (err) {
-                console.error("❌ Vendor registration error:", err.message);
+].length);
 
-                if (err.code === "ER_DUP_ENTRY") {
-                    return res.status(409).json({
-                        message: "Vendor email already registered"
-                    });
-                }
+db.query(
+    sql,
+    [
+        shopName,
+        ownerName,
+        email,
+        phone,
+        address,
+        categoryData,
+        password
+    ],
+    (err, result) => {
+        if (err) {
+            console.error("❌ Vendor registration error:", err.message);
 
-                return res.status(500).json({
-                    message: "Database error"
+            if (err.code === "ER_DUP_ENTRY") {
+                return res.status(409).json({
+                    message: "Vendor email already registered"
                 });
             }
 
-            res.status(201).json({
-                message: "Vendor registered successfully!",
-                vendorId: result.insertId
+            return res.status(500).json({
+                message: "Database error"
             });
         }
+
+        res.status(201).json({
+            message: "Vendor registered successfully!",
+            vendorId: result.insertId
+        });
+    }
 );
+});
 
 
 // Start server
