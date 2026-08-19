@@ -55,45 +55,83 @@ function AddProduct() {
       reader.readAsDataURL(file);
     }    
   
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
   e.preventDefault();
 
-  let products =
-    JSON.parse(localStorage.getItem("vendorproducts")) || [];
+  const vendor = JSON.parse(localStorage.getItem("vendor"));
 
-  if (product.index !== undefined) {
-    const index = product.index;
-
-    const updatedProduct = { ...product };
-    delete updatedProduct.index;
-
-    products[index] = updatedProduct;
-    
-    alert("Product updated successfully!");
-
-  } else {
-
-    const vendor = JSON.parse(localStorage.getItem("vendor"))
-
-    const newProduct = { ...product,
-        id: Date.now(),
-        vendorEmail: vendor.email,
-        vendorName: vendor.shopName,
-     };
-
-    products.push(newProduct);
-
-    alert("Product added successfully!");
+  if (!vendor || !vendor.id) {
+    alert("Vendor information not found. Please login again.");
+    navigate("/vendor-login");
+    return;
   }
 
-  localStorage.setItem(
-    "vendorproducts",
-    JSON.stringify(products)
-  );
+  try {
+    const response = await fetch("http://localhost:5000/api/products", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        vendorId: vendor.id,
+        vendorEmail: vendor.email,
+        vendorName: vendor.shopName,
 
-  localStorage.removeItem("editProduct");
+        name: product.name,
+        category: product.category,
+        price: product.price,
+        stock: product.stock,
+        description: product.description,
+        image: product.image,
 
-  navigate("/vendor-dashboard");
+        fabric: product.fabric,
+        gsm: product.gsm,
+        sleeveType: product.sleeveType,
+        neckType: product.neckType,
+        fit: product.fit,
+        pattern: product.pattern,
+        sareeLength: product.sareeLength,
+        blousePiece: product.blousePiece,
+        occasion: product.occasion,
+        washCare: product.washCare,
+
+        collarType: product.collarType,
+        hoodType: product.hoodType,
+        pocketType: product.pocketType,
+        waistType: product.waistType,
+        length: product.length,
+        stretchable: product.stretchable,
+        ageGroup: product.ageGroup,
+        kurtaLength: product.kurtaLength,
+        bottomType: product.bottomType,
+        dupattaIncluded: product.dupattaIncluded,
+        styleType: product.styleType,
+        waistRise: product.waistRise,
+        trendType: product.trendType,
+        brand: product.brand,
+        exportGrade: product.exportGrade,
+        condition: product.condition,
+        moq: product.moq,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.message || "Failed to add product");
+      return;
+    }
+
+    alert("Product added successfully!");
+
+    localStorage.removeItem("editProduct");
+
+    navigate("/vendor-dashboard");
+
+  } catch (error) {
+    console.error("❌ Add product error:", error);
+    alert("Unable to connect to the backend.");
+  }
 };
 
 const editProduct = 
