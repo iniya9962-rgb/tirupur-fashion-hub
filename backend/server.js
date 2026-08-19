@@ -229,6 +229,159 @@ app.post("/api/vendor-login", (req, res) => {
     });
 });
 
+// Add Product API
+app.post("/api/products", (req, res) => {
+    const {
+        vendorId,
+        vendorEmail,
+        vendorName,
+        name,
+        category,
+        price,
+        stock,
+        description,
+        image,
+        fabric,
+        gsm,
+        sleeveType,
+        neckType,
+        fit,
+        pattern,
+        sareeLength,
+        blousePiece,
+        occasion,
+        washCare,
+        collarType,
+        hoodType,
+        pocketType,
+        waistType,
+        length,
+        stretchable,
+        ageGroup,
+        kurtaLength,
+        bottomType,
+        dupattaIncluded,
+        styleType,
+        waistRise,
+        trendType,
+        brand,
+        exportGrade,
+        condition,
+        moq
+    } = req.body;
+
+    if (
+        !vendorId ||
+        !vendorEmail ||
+        !vendorName ||
+        !name ||
+        !category ||
+        !price ||
+        !stock ||
+        !description
+    ) {
+        return res.status(400).json({
+            message: "Required product fields are missing"
+        });
+    }
+
+    const sql = `
+        INSERT INTO products (
+            vendor_id,
+            vendor_email,
+            vendor_name,
+            name,
+            category,
+            price,
+            stock,
+            description,
+            image,
+            fabric,
+            gsm,
+            sleeve_type,
+            neck_type,
+            fit,
+            pattern,
+            saree_length,
+            blouse_piece,
+            occasion,
+            wash_care,
+            collar_type,
+            hood_type,
+            pocket_type,
+            waist_type,
+            length,
+            stretchable,
+            age_group,
+            kurta_length,
+            bottom_type,
+            dupatta_included,
+            style_type,
+            waist_rise,
+            trend_type,
+            brand,
+            export_grade,
+            condition_type,
+            moq
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const values = [
+        vendorId,
+        vendorEmail,
+        vendorName,
+        name,
+        category,
+        price,
+        stock,
+        description,
+        image || null,
+        fabric || null,
+        gsm || null,
+        sleeveType || null,
+        neckType || null,
+        fit || null,
+        pattern || null,
+        sareeLength || null,
+        blousePiece || null,
+        occasion || null,
+        washCare || null,
+        collarType || null,
+        hoodType || null,
+        pocketType || null,
+        waistType || null,
+        length || null,
+        stretchable || null,
+        ageGroup || null,
+        kurtaLength || null,
+        bottomType || null,
+        dupattaIncluded || null,
+        styleType || null,
+        waistRise || null,
+        trendType || null,
+        brand || null,
+        exportGrade || null,
+        condition || null,
+        moq || null
+    ];
+
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error("❌ Add product error:", err.message);
+
+            return res.status(500).json({
+                message: "Database error"
+            });
+        }
+
+        res.status(201).json({
+            message: "Product added successfully!",
+            productId: result.insertId
+        });
+    });
+});
+
 // Start server
 const PORT = 5000;
 
