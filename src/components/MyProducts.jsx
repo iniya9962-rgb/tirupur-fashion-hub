@@ -71,6 +71,40 @@ function MyProducts() {
     return <p>Loading products...</p>;
   }
 
+const handleDelete = async (productId) => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this product?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    const response = await fetch(
+      `http://localhost:5000/api/products/${productId}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.message || "Failed to delete product");
+      return;
+    }
+
+    setProducts((prevProducts) =>
+      prevProducts.filter((product) => product.id !== productId)
+    );
+
+    alert("Product deleted successfully!");
+
+  } catch (error) {
+    console.error("❌ Delete product error:", error);
+    alert("Unable to connect to the backend.");
+  }
+};
+
   return (
     <div className="my-products-container">
       <h2>📦 My Products</h2>
@@ -129,6 +163,7 @@ function MyProducts() {
 
               <button
                 className="delete-btn"
+                onClick={() => handleDelete(product.id)}
               >
                 🗑️ Delete
               </button>
