@@ -382,6 +382,30 @@ app.post("/api/products", (req, res) => {
     });
 });
 
+// Get products for logged-in vendor
+app.get("/api/products/vendor/:vendorId", (req, res) => {
+    const { vendorId } = req.params;
+
+    const sql = `
+        SELECT *
+        FROM products
+        WHERE vendor_id = ?
+        ORDER BY id DESC
+    `;
+
+    db.query(sql, [vendorId], (err, results) => {
+        if (err) {
+            console.error("❌ Get products error:", err.message);
+
+            return res.status(500).json({
+                message: "Database error"
+            });
+        }
+
+        res.json(results);
+    });
+});
+
 // Start server
 const PORT = 5000;
 

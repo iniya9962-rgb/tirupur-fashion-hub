@@ -1,38 +1,75 @@
-
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function MyProducts() {
   const navigate = useNavigate();
 
-  const products =
-    JSON.parse(localStorage.getItem("vendorproducts")) || [];
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    const handleEdit = (index) => {
-  const productToEdit = products[index];
+  useEffect(() => {
+    let isMounted = true;
 
-  localStorage.setItem(
-    "editProduct",
-    JSON.stringify({
-      ...productToEdit,
-      index:index
-    })
-  );
+    const loadProducts = async () => {
+      const vendor = JSON.parse(localStorage.getItem("vendor"));
 
-  navigate("/vendor/add-product");
-};
+      if (!vendor || !vendor.id) {
+        if (isMounted) {
+          alert("Vendor information not found. Please login again.");
+          navigate("/vendor-login");
+        }
+        return;
+      }
 
-//Delete product function
-const handleDelete = (index) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this product?"
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/products/vendor/${vendor.id}`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          if (isMounted) {
+            alert(data.message || "Failed to load products");
+          }
+          return;
+        }
+
+        if (isMounted) {
+          setProducts(data);
+        }
+
+      } catch (error) {
+        console.error("❌ Get products error:", error);
+        if (isMounted) {
+          alert("Unable to connect to the backend.");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate]);
+
+  const handleEdit = (product) => {
+    localStorage.setItem(
+      "editProduct",
+      JSON.stringify(product)
     );
 
-    if (!confirmDelete) return;
-
-    const updatedProducts = products.filter((_, i) => i !== index);
-    localStorage.setItem("vendorproducts", JSON.stringify(updatedProducts));
-    window.location.reload(); // Refresh the page to update the UI
+    navigate("/vendor/add-product");
   };
+
+  if (loading) {
+    return <p>Loading products...</p>;
+  }
 
   return (
     <div className="my-products-container">
@@ -42,42 +79,60 @@ const handleDelete = (index) => {
         <p>No products added yet.</p>
       ) : (
         <div className="products-grid">
-          {products.map((product, index) => (
-            <div className="product-card" key={index}>
+          {products.map((product) => (
+            <div className="product-card" key={product.id}>
+
+              {product.image && (
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="product-image"
+                />
+              )}
+
               <h3>{product.name}</h3>
-              <p><strong>Category:</strong> {product.category}</p>
-              <p><strong>Price:</strong> ₹{product.price}</p>
-              <p><strong>Stock:</strong> {product.stock}</p>
-              <p><strong>Description:</strong> {product.description}</p>
+
+              <p>
+                <strong>Category:</strong> {product.category}
+              </p>
+
+              <p>
+                <strong>Price:</strong> ₹{product.price}
+              </p>
+
+              <p>
+                <strong>Stock:</strong> {product.stock}
+              </p>
+
+              <p>
+                <strong>Description:</strong> {product.description}
+              </p>
 
               {product.fabric && (
-                <p><strong>Fabric:</strong> {product.fabric}</p>
+                <p>
+                  <strong>Fabric:</strong> {product.fabric}
+                </p>
               )}
 
               {product.fit && (
-                <p><strong>Fit:</strong> {product.fit}</p>
+                <p>
+                  <strong>Fit:</strong> {product.fit}
+                </p>
               )}
 
-              {product.image && (
-                 <img
-                     src={product.image}
-                     alt={product.name}
-                     className="product-image"
-                 />
-              )}
               <button
                 className="edit-btn"
-                onClick={() => handleEdit(index)}
+                onClick={() => handleEdit(product)}
               >
-                ✏️Edit
+                ✏️ Edit
               </button>
 
               <button
                 className="delete-btn"
-                onClick={() => handleDelete(index)}
               >
-                🗑️Delete
+                🗑️ Delete
               </button>
+
             </div>
           ))}
         </div>
