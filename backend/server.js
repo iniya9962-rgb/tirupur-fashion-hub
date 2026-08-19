@@ -147,40 +147,87 @@ app.post("/api/vendor-register", (req, res) => {
     password
 ].length);
 
-db.query(
-    sql,
-    [
-        shopName,
-        ownerName,
-        email,
-        phone,
-        address,
-        categoryData,
-        password
-    ],
-    (err, result) => {
-        if (err) {
-            console.error("❌ Vendor registration error:", err.message);
+    db.query(
+        sql,
+        [
+            shopName,
+            ownerName,
+            email,
+            phone,
+            address,
+            categoryData,
+            password
+        ],
+        (err, result) => {
+            if (err) {
+                console.error("❌ Vendor registration error:", err.message);
 
-            if (err.code === "ER_DUP_ENTRY") {
-                return res.status(409).json({
-                    message: "Vendor email already registered"
+                if (err.code === "ER_DUP_ENTRY") {
+                    return res.status(409).json({
+                        message: "Vendor email already registered"
+                    });
+                }
+
+                return res.status(500).json({
+                    message: "Database error"
                 });
             }
+
+            res.status(201).json({
+                message: "Vendor registered successfully!",
+                vendorId: result.insertId
+            });
+        }
+    );
+});
+
+// Vendor Login API
+app.post("/api/vendor-login", (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({
+            message: "Email and password are required"
+        });
+    }
+
+    const sql = `
+        SELECT id, shop_name, owner_name, email, phone, address, categories
+        FROM vendors
+        WHERE email = ? AND password = ?
+    `;
+
+    db.query(sql, [email, password], (err, results) => {
+        if (err) {
+            console.error("❌ Vendor login error:", err.message);
 
             return res.status(500).json({
                 message: "Database error"
             });
         }
 
-        res.status(201).json({
-            message: "Vendor registered successfully!",
-            vendorId: result.insertId
-        });
-    }
-);
-});
+        if (results.length === 0) {
+            return res.status(401).json({
+                message: "Invalid vendor email or password"
+            });
+        }
 
+        const vendor = results[0];
+
+        res.json({
+            message: "Vendor login successful",
+            vendor: {
+                id: vendor.id,
+                shopName: vendor.shop_name,
+                ownerName: vendor.owner_name,
+                email: vendor.email,
+                phone: vendor.phone,
+                address: vendor.address,
+                categories: JSON.parse(vendor.categories)
+            }
+        });
+    });
+});
 
 // Start server
 const PORT = 5000;
