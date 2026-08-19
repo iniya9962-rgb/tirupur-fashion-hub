@@ -4,10 +4,13 @@ import { useNavigate } from "react-router-dom";
 function VendorDashboard() {
   const navigate = useNavigate();
 
-  const vendor = JSON.parse(localStorage.getItem("vendor"));
+  const vendor = JSON.parse(sessionStorage.getItem("vendor"));
 
   const handleLogout = () => {
+    sessionStorage.removeItem("vendorId");
+    sessionStorage.removeItem("vendor");
     navigate("/");
+    window.location.reload();
   };
 
   return (

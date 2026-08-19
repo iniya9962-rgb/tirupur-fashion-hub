@@ -1,10 +1,47 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./SalesAnalytics.css";
 
 function SalesAnalytics() {
   const navigate = useNavigate();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const vendorId = sessionStorage.getItem("vendorId");
 
-  const orders = JSON.parse(localStorage.getItem("vendorOrders")) || [];
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!vendorId) {
+        alert("Vendor information not found. Please login again.");
+        navigate("/vendor-login");
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/orders/vendor/${vendorId}`
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setOrders(data);
+        } else {
+          alert(data.message || "Failed to load orders");
+        }
+      } catch (error) {
+        console.error("❌ Error fetching orders:", error);
+        alert("Unable to connect to the backend.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [vendorId, navigate]);
+
+  if (loading) {
+    return <p>Loading analytics...</p>;
+  }
 
   const acceptedOrders = orders.filter(
     (order) => order.status === "Accepted"
@@ -32,7 +69,7 @@ function SalesAnalytics() {
   const salesByProduct = {};
 
   acceptedOrders.forEach((order) => {
-    const productName = order.productName;
+    const productName = order.product_name;
     const quantity = Number(order.quantity || 1);
     const revenue = Number(order.price) * quantity;
 

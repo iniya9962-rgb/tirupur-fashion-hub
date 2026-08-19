@@ -23,8 +23,9 @@ function Login() {
             return;
         }
 
-        localStorage.setItem("loggedIn", "true");
-        localStorage.setItem("user", JSON.stringify(data.user));
+        // Store user info in sessionStorage (can be used for UI state)
+        sessionStorage.setItem("user", JSON.stringify(data.user));
+        sessionStorage.setItem("userId", data.user.id);
 
         alert(`Welcome, ${data.user.name}! You have successfully logged in.`);
 

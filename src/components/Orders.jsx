@@ -1,88 +1,80 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Orders.css";
-import emailjs from "@emailjs/browser"
+
 function Orders() {
   const navigate = useNavigate();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const orders = JSON.parse(localStorage.getItem("vendorOrders")) || [];
+  const vendorId = sessionStorage.getItem("vendorId");
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!vendorId) {
+        alert("Vendor information not found. Please login again.");
+        navigate("/vendor-login");
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/orders/vendor/${vendorId}`
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setOrders(data);
+        } else {
+          alert(data.message || "Failed to load orders");
+        }
+      } catch (error) {
+        console.error("❌ Error fetching orders:", error);
+        alert("Unable to connect to the backend.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [vendorId, navigate]);
 
   const updateStatus = async (orderId, status) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/orders/${orderId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status }),
+        }
+      );
 
-  // Get vendor orders
-  const vendorOrders =
-    JSON.parse(localStorage.getItem("vendorOrders")) || [];
+      const data = await response.json();
 
-  // Find the order
-  const order = vendorOrders.find(
-    (item) => item.orderId === orderId
-  );
+      if (!response.ok) {
+        alert(data.message || "Failed to update order");
+        return;
+      }
 
-  if (!order) {
-    console.error("❌ Order not found");
-    return;
+      // Update local state
+      setOrders(orders.map((order) =>
+        order.id === orderId ? { ...order, status } : order
+      ));
+
+      alert("Order status updated successfully!");
+    } catch (error) {
+      console.error("❌ Error updating order:", error);
+      alert("Unable to update order status.");
+    }
+  };
+
+  if (loading) {
+    return <p>Loading orders...</p>;
   }
-
-   console.log("📦 Order selected:", order);
-   console.log("📧 Customer Email:", order.customerEmail);
-
-  // Update vendor orders
-  const updatedVendorOrders = vendorOrders.map((item) =>
-    item.orderId === orderId
-      ? { ...item, status }
-      : item
-  );
-
-  localStorage.setItem(
-    "vendorOrders",
-    JSON.stringify(updatedVendorOrders)
-  );
-
-  // Update customer orders
-  const customerOrders =
-    JSON.parse(localStorage.getItem("customerOrders")) || [];
-
-  const updatedCustomerOrders = customerOrders.map((item) =>
-    item.orderId === orderId
-      ? { ...item, status }
-      : item
-  );
-
-  localStorage.setItem(
-    "customerOrders",
-    JSON.stringify(updatedCustomerOrders)
-  );
-
-  // 📧 Send status email to customer
-  try {
-    const response = await emailjs.send(
-      "service_466q9sd",
-      "template_m5qzsrs",
-      {
-        customerEmail: order.customerEmail,
-        customerName: order.customerName,
-        productName: order.productName,
-        quantity: order.quantity,
-        price: order.price,
-        status: status,
-        vendorEmail: order.vendorEmail,
-      },
-      "BkBJdouBomcnqXGBA"
-    );
-
-    console.log("✅ CUSTOMER EMAIL SENT:", response);
-
-  } catch (error) {
-    console.error("❌ CUSTOMER EMAIL ERROR:", error);
-    console.error("Status:", error?.status);
-    console.error("Text:", error?.text);
-
-    alert(
-      `Customer email failed!\nStatus: ${error?.status}\nMessage: ${error?.text}`
-    );
-  }
-
-  console.log("🔄 Status updated. Page will NOT reload during testing.");
-};
 
   return (
     <div className="orders-page">
@@ -96,9 +88,9 @@ function Orders() {
         <p>No orders received yet.</p>
       ) : (
         orders.map((order) => (
-          <div key={order.orderId} className="order-card">
-            <h3>{order.productName}</h3>
-            <p><strong>Customer:</strong> {order.customerName}</p>
+          <div key={order.id} className="order-card">
+            <h3>{order.product_name}</h3>
+            <p><strong>Customer:</strong> {order.customer_name}</p>
             <p><strong>Quantity:</strong> {order.quantity}</p>
             <p><strong>Status:</strong> {order.status}</p>
 
@@ -106,14 +98,14 @@ function Orders() {
               <div className="order-actions">
                 <button
                   className="accept-btn"
-                  onClick={() => updateStatus(order.orderId, "Accepted")}
+                  onClick={() => updateStatus(order.id, "Accepted")}
                 >
                   Accept
                 </button>
 
                 <button
                   className="reject-btn"
-                  onClick={() => updateStatus(order.orderId, "Rejected")}
+                  onClick={() => updateStatus(order.id, "Rejected")}
                 >
                   Reject
                 </button>

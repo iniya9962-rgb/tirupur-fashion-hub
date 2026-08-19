@@ -11,9 +11,10 @@ function MyProducts() {
     let isMounted = true;
 
     const loadProducts = async () => {
-      const vendor = JSON.parse(localStorage.getItem("vendor"));
+      const vendorId = sessionStorage.getItem("vendorId");
+      const vendor = JSON.parse(sessionStorage.getItem("vendor"));
 
-      if (!vendor || !vendor.id) {
+      if (!vendorId || !vendor) {
         if (isMounted) {
           alert("Vendor information not found. Please login again.");
           navigate("/vendor-login");
@@ -23,7 +24,7 @@ function MyProducts() {
 
       try {
         const response = await fetch(
-          `http://localhost:5000/api/products/vendor/${vendor.id}`
+          `http://localhost:5000/api/products/vendor/${vendorId}`
         );
 
         const data = await response.json();
@@ -58,14 +59,11 @@ function MyProducts() {
     };
   }, [navigate]);
 
-  const handleEdit = (product) => {
-    localStorage.setItem(
-      "editProduct",
-      JSON.stringify(product)
-    );
-
-    navigate("/vendor/add-product");
-  };
+const handleEdit = (product) => {
+  navigate("/vendor/add-product", {
+    state: { product }
+  });
+};
 
   if (loading) {
     return <p>Loading products...</p>;

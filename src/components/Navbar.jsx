@@ -9,11 +9,12 @@ function Navbar({
   const navigate = useNavigate();
   const [showAccount, setShowAccount] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem("user"));
-  const loggedIn = localStorage.getItem("loggedIn") === "true";
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  const loggedIn = !!sessionStorage.getItem("userId");
 
   const handleLogout = () => {
-    localStorage.removeItem("loggedIn");
+    sessionStorage.removeItem("userId");
+    sessionStorage.removeItem("user");
     setShowAccount(false);
     navigate("/login");
     window.location.reload();

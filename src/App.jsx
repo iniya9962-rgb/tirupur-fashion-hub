@@ -20,7 +20,6 @@ import SalesAnalytics from "./components/SalesAnalytics";
 import OrderSuccess from "./components/OrderSuccess";
 import CustomerOrders from "./components/CustomerOrders";
 import About from "./components/About";
-import emailjs from "@emailjs/browser"
 
 function App() {
   const navigate = useNavigate();
@@ -38,72 +37,52 @@ function App() {
   }
   
   const buyNow = async(product) => {
-  const existingVendorOrders =
-    JSON.parse(localStorage.getItem("vendorOrders")) || [];
+  const customerId = sessionStorage.getItem("userId");
+  const user = JSON.parse(sessionStorage.getItem("user"));
 
-  const existingCustomerOrders = 
-    JSON.parse(localStorage.getItem("customerOrders")) || [];
+  if (!customerId || !user) {
+    alert("Please login first to place an order.");
+    navigate("/login");
+    return;
+  }
 
-    const orderId = Date.now();
-
-    const user = JSON.parse(localStorage.getItem("user"));
-    
-    const newOrder  = {
-      orderId: orderId,
-      productName: product.name,
-      customerName: user?.name || "Customer",
-      customerEmail: user?.email || "",
-      quantity: 1,
-      price: product.price,
-      vendorEmail: product.vendorEmail,
-      vendorName: product.vendorName,
-      image: product.image,
-      status: "Pending",
-  };
-
-  //Save order for vendor
-  localStorage.setItem(
-    "vendorOrders",
-    JSON.stringify([...existingVendorOrders, newOrder])
-  );    
-
-  //Save order for customer
-  localStorage.setItem(
-    "customerOrders",
-    JSON.stringify([...existingCustomerOrders, newOrder])
-  );
-
-  // 📧 Send email to vendor
   try {
-    await emailjs.send(
-      "service_466q9sd",
-      "template_di3dkz8",
-      {
-        productName: product.name,
-        customerName: "Customer",
-        quantity: 1,
-        price: product.price,
-        vendorEmail: product.vendorEmail,
-        vendorName: product.vendorName,
-        status: "Pending",
+    const orderData = {
+      customerId: parseInt(customerId),
+      customerEmail: user.email,
+      customerName: user.name,
+      customerPhone: user.phone || "",
+      vendorId: product.vendorId || 1,
+      productId: product.id,
+      productName: product.name,
+      category: product.category,
+      price: product.price,
+      quantity: 1,
+      image: product.image,
+      status: "Pending"
+    };
+
+    const response = await fetch("http://localhost:5000/api/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-      "BkBJdouBomcnqXGBA"
-    );
+      body: JSON.stringify(orderData),
+    });
 
-    console.log("✅ Vendor email sent successfully!");
+    const data = await response.json();
 
- } catch (error) {
-  console.error("❌ FULL EMAILJS ERROR:", error);
-  console.error("Status:", error?.status);
-  console.error("Text:", error?.text);
+    if (!response.ok) {
+      alert(data.message || "Failed to place order");
+      return;
+    }
 
-  alert(
-    `Email failed!\nStatus: ${error?.status}\nMessage: ${error?.text}`
-  );
-}
-
-  //Go to Order Success page
-  navigate("/order-success");
+    alert("Order placed successfully!");
+    navigate("/order-success");
+  } catch (error) {
+    console.error("❌ Buy now error:", error);
+    alert("Unable to process order. Please try again.");
+  }
 };
 
   const removeFromCart = (indexToRemove) => {

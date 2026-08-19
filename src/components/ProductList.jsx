@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
 import products from "../data/products";
 
@@ -7,7 +8,27 @@ function ProductList({
   addToCart,
   buyNow }) {
 
-    const vendorProducts = JSON.parse(localStorage.getItem("vendorproducts")) || [];
+    const [vendorProducts, setVendorProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      const fetchProducts = async () => {
+        try {
+          const response = await fetch("http://localhost:5000/api/products");
+          const data = await response.json();
+          
+          if (response.ok) {
+            setVendorProducts(data);
+          }
+        } catch (error) {
+          console.error("❌ Error fetching products:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchProducts();
+    }, []);
 
     const allProducts = [...products, ...vendorProducts];
   const filteredProducts = allProducts.filter((product) => {
@@ -21,6 +42,10 @@ function ProductList({
     return matchesCategory && matchesSearch;
   });
    
+  if (loading) {
+    return <div className="product-list"><p>Loading products...</p></div>;
+  }
+
   return (
     <div className="product-list">
       {filteredProducts.map((product) => (

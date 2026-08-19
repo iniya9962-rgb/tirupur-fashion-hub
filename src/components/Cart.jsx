@@ -1,41 +1,60 @@
 import {useNavigate} from "react-router-dom";
-import emailjs from "@emailjs/browser"
+
 function Cart({ cartItems, removeFromCart, clearCart }) {
   const navigate = useNavigate();
 
-  const handleCheckout = () => {
-    const existingOrders = JSON.parse(localStorage.getItem("vendorOrders")) || [];
+  const handleCheckout = async () => {
+    const customerId = sessionStorage.getItem("userId");
+    const user = JSON.parse(sessionStorage.getItem("user"));
 
-    const newOrders = cartItems.map(item => ({
-      productName: item.name,
-      customerName: "Customer", // Placeholder for customer name
-      quantity: item.quantity || 1, // Assuming quantity is 1 for each item in the cart
-      price: item.price,
-      vendorEmail: item.vendorEmail,
-      vendorName: item.vendorName,
-      status: "Pending"
-    }));
+    if (!customerId || !user) {
+      alert("Please login first to place an order.");
+      navigate("/login");
+      return;
+    }
 
-    localStorage.setItem("vendorOrders", JSON.stringify([...existingOrders, ...newOrders]));
-    clearCart(); // Clear the cart after placing the order
-    alert("Order placed successfully!");
-    navigate("/");
+    try {
+      // Place orders through backend
+      for (const item of cartItems) {
+        const orderData = {
+          customerId: parseInt(customerId),
+          customerEmail: user.email,
+          customerName: user.name,
+          customerPhone: user.phone || "",
+          vendorId: item.vendorId || 1,
+          productId: item.id,
+          productName: item.name,
+          category: item.category,
+          price: item.price,
+          quantity: item.quantity || 1,
+          image: item.image,
+          status: "Pending"
+        };
 
-    newOrders.forEach((order) => {
-  emailjs.send(
-    "YOUR_SERVICE_ID",
-    "YOUR_TEMPLATE_ID",
-    {
-      vendor_email: order.vendorEmail,
-      vendor_name: order.vendorName,
-      product_name: order.productName,
-      customer_name: order.customerName,
-      quantity: order.quantity,
-      price: order.price,
-    },
-    "YOUR_PUBLIC_KEY"
-  );
-});
+        const response = await fetch("http://localhost:5000/api/orders", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(orderData),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          alert(data.message || "Failed to place order");
+          return;
+        }
+      }
+
+      clearCart();
+      alert("Order placed successfully!");
+      navigate("/");
+
+    } catch (error) {
+      console.error("❌ Checkout error:", error);
+      alert("Unable to process order. Please try again.");
+    }
   };
 
   const total = cartItems.reduce((sum, item) => sum + item.price, 0);

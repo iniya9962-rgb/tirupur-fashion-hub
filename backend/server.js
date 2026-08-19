@@ -382,6 +382,155 @@ app.post("/api/products", (req, res) => {
     });
 });
 
+// Update Product API
+app.put("/api/products/:id", (req, res) => {
+    const { id } = req.params;
+
+    const {
+        name,
+        category,
+        price,
+        stock,
+        description,
+        image,
+        fabric,
+        gsm,
+        sleeveType,
+        neckType,
+        fit,
+        pattern,
+        sareeLength,
+        blousePiece,
+        occasion,
+        washCare,
+        collarType,
+        hoodType,
+        pocketType,
+        waistType,
+        length,
+        stretchable,
+        ageGroup,
+        kurtaLength,
+        bottomType,
+        dupattaIncluded,
+        styleType,
+        waistRise,
+        trendType,
+        brand,
+        exportGrade,
+        condition,
+        moq
+    } = req.body;
+
+    if (
+        !name ||
+        !category ||
+        !price ||
+        !stock ||
+        !description
+    ) {
+        return res.status(400).json({
+            message: "Required product fields are missing"
+        });
+    }
+
+    const sql = `
+        UPDATE products
+        SET
+            name = ?,
+            category = ?,
+            price = ?,
+            stock = ?,
+            description = ?,
+            image = ?,
+            fabric = ?,
+            gsm = ?,
+            sleeve_type = ?,
+            neck_type = ?,
+            fit = ?,
+            pattern = ?,
+            saree_length = ?,
+            blouse_piece = ?,
+            occasion = ?,
+            wash_care = ?,
+            collar_type = ?,
+            hood_type = ?,
+            pocket_type = ?,
+            waist_type = ?,
+            length = ?,
+            stretchable = ?,
+            age_group = ?,
+            kurta_length = ?,
+            bottom_type = ?,
+            dupatta_included = ?,
+            style_type = ?,
+            waist_rise = ?,
+            trend_type = ?,
+            brand = ?,
+            export_grade = ?,
+            condition_type = ?,
+            moq = ?
+        WHERE id = ?
+    `;
+
+    const values = [
+        name,
+        category,
+        price,
+        stock,
+        description,
+        image || null,
+        fabric || null,
+        gsm || null,
+        sleeveType || null,
+        neckType || null,
+        fit || null,
+        pattern || null,
+        sareeLength || null,
+        blousePiece || null,
+        occasion || null,
+        washCare || null,
+        collarType || null,
+        hoodType || null,
+        pocketType || null,
+        waistType || null,
+        length || null,
+        stretchable || null,
+        ageGroup || null,
+        kurtaLength || null,
+        bottomType || null,
+        dupattaIncluded || null,
+        styleType || null,
+        waistRise || null,
+        trendType || null,
+        brand || null,
+        exportGrade || null,
+        condition || null,
+        moq || null,
+        id
+    ];
+
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error("❌ Update product error:", err.message);
+
+            return res.status(500).json({
+                message: "Database error"
+            });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                message: "Product not found"
+            });
+        }
+
+        res.json({
+            message: "Product updated successfully!"
+        });
+    });
+});
+
 // Get products for logged-in vendor
 app.get("/api/products/vendor/:vendorId", (req, res) => {
     const { vendorId } = req.params;
@@ -429,6 +578,185 @@ app.delete("/api/products/:id", (req, res) => {
 
         res.json({
             message: "Product deleted successfully!"
+        });
+    });
+});
+
+// Get all products for customers
+app.get("/api/products", (req, res) => {
+    const sql = `
+        SELECT *
+        FROM products
+        ORDER BY id DESC
+    `;
+
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error("❌ Get all products error:", err.message);
+
+            return res.status(500).json({
+                message: "Database error"
+            });
+        }
+
+        res.json(results);
+    });
+});
+
+// Place order
+app.post("/api/orders", (req, res) => {
+    const {
+        customerId,
+        customerEmail,
+        customerName,
+        customerPhone,
+        vendorId,
+        productId,
+        productName,
+        category,
+        price,
+        quantity,
+        image,
+        status
+    } = req.body;
+
+    if (!customerId || !vendorId || !productId || !quantity) {
+        return res.status(400).json({
+            message: "Required order fields are missing"
+        });
+    }
+
+    const sql = `
+        INSERT INTO orders (
+            customer_id,
+            customer_email,
+            customer_name,
+            customer_phone,
+            vendor_id,
+            product_id,
+            product_name,
+            category,
+            price,
+            quantity,
+            image,
+            status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const values = [
+        customerId,
+        customerEmail || null,
+        customerName || null,
+        customerPhone || null,
+        vendorId,
+        productId,
+        productName || null,
+        category || null,
+        price || 0,
+        quantity,
+        image || null,
+        status || "Pending"
+    ];
+
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error("❌ Place order error:", err.message);
+
+            return res.status(500).json({
+                message: "Database error"
+            });
+        }
+
+        res.status(201).json({
+            message: "Order placed successfully!",
+            orderId: result.insertId
+        });
+    });
+});
+
+// Get customer orders
+app.get("/api/orders/customer/:customerId", (req, res) => {
+    const { customerId } = req.params;
+
+    const sql = `
+        SELECT *
+        FROM orders
+        WHERE customer_id = ?
+        ORDER BY id DESC
+    `;
+
+    db.query(sql, [customerId], (err, results) => {
+        if (err) {
+            console.error("❌ Get customer orders error:", err.message);
+
+            return res.status(500).json({
+                message: "Database error"
+            });
+        }
+
+        res.json(results);
+    });
+});
+
+// Get vendor orders
+app.get("/api/orders/vendor/:vendorId", (req, res) => {
+    const { vendorId } = req.params;
+
+    const sql = `
+        SELECT *
+        FROM orders
+        WHERE vendor_id = ?
+        ORDER BY id DESC
+    `;
+
+    db.query(sql, [vendorId], (err, results) => {
+        if (err) {
+            console.error("❌ Get vendor orders error:", err.message);
+
+            return res.status(500).json({
+                message: "Database error"
+            });
+        }
+
+        res.json(results);
+    });
+});
+
+// Update order status
+app.put("/api/orders/:orderId", (req, res) => {
+    const { orderId } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+        return res.status(400).json({
+            message: "Status is required"
+        });
+    }
+
+    const sql = `
+        UPDATE orders
+        SET status = ?
+        WHERE id = ?
+    `;
+
+    db.query(sql, [status, orderId], (err, result) => {
+        if (err) {
+            console.error("❌ Update order error:", err.message);
+
+            return res.status(500).json({
+                message: "Database error"
+            });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                message: "Order not found"
+            });
+        }
+
+        res.json({
+            message: "Order status updated successfully!"
         });
     });
 });

@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 function VendorLogin() { 
 
   const navigate = useNavigate ();
-  
+
   const [vendorLogin, setVendorLogin] = useState({
     email: "",
     password: ""
@@ -40,8 +40,9 @@ function VendorLogin() {
       return;
     }
 
-    localStorage.setItem("vendorLoggedIn", "true");
-    localStorage.setItem("vendor", JSON.stringify(data.vendor));
+    // Store vendor info in sessionStorage for session persistence
+    sessionStorage.setItem("vendor", JSON.stringify(data.vendor));
+    sessionStorage.setItem("vendorId", data.vendor.id);
 
     alert("Vendor Login Successful!");
 

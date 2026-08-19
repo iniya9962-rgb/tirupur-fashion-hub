@@ -1,36 +1,38 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 function AddProduct() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [editProduct] = useState(location.state?.product || null);
 
   const [product, setProduct] = useState(() => {
+    // Check if we're editing (from location.state)
+    if (location.state?.product) {
+      return location.state.product;
+    }
 
-  const savedProduct = JSON.parse(
-    localStorage.getItem("editProduct")
-  );
+    return {
+      name: "",
+      category: "",
+      price: "",
+      stock: "",
+      description: "",
+      image: null,
 
-  return savedProduct || {
-    name: "",
-    category: "",
-    price: "",
-    stock: "",
-    description: "",
-    image: null,
-
-    fabric: "",
-    gsm: "",
-    sleeveType: "",
-    neckType: "",
-    fit: "",
-    pattern: "",
-    sareeLength: "",
-    blousePiece: "",
-    occasion: "",
-    washCare: "",
-  };
-
-});
+      fabric: "",
+      gsm: "",
+      sleeveType: "",
+      neckType: "",
+      fit: "",
+      pattern: "",
+      sareeLength: "",
+      blousePiece: "",
+      occasion: "",
+      washCare: "",
+    };
+  });
 
   const handleChange = (e) => {
     setProduct({
@@ -58,84 +60,114 @@ function AddProduct() {
   const handleSubmit = async (e) => {
   e.preventDefault();
 
-  const vendor = JSON.parse(localStorage.getItem("vendor"));
+  const vendorId = sessionStorage.getItem("vendorId");
+  const vendor = JSON.parse(sessionStorage.getItem("vendor"));
 
-  if (!vendor || !vendor.id) {
+  if (!vendorId || !vendor) {
     alert("Vendor information not found. Please login again.");
     navigate("/vendor-login");
     return;
   }
 
   try {
-    const response = await fetch("http://localhost:5000/api/products", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        vendorId: vendor.id,
-        vendorEmail: vendor.email,
-        vendorName: vendor.shopName,
+    const productData = {
+      vendorId: parseInt(vendorId),
+      vendorEmail: vendor.email,
+      vendorName: vendor.shopName,
 
-        name: product.name,
-        category: product.category,
-        price: product.price,
-        stock: product.stock,
-        description: product.description,
-        image: product.image,
+      name: product.name,
+      category: product.category,
+      price: product.price,
+      stock: product.stock,
+      description: product.description,
+      image: product.image,
 
-        fabric: product.fabric,
-        gsm: product.gsm,
-        sleeveType: product.sleeveType,
-        neckType: product.neckType,
-        fit: product.fit,
-        pattern: product.pattern,
-        sareeLength: product.sareeLength,
-        blousePiece: product.blousePiece,
-        occasion: product.occasion,
-        washCare: product.washCare,
+      fabric: product.fabric,
+      gsm: product.gsm,
+      sleeveType: product.sleeveType,
+      neckType: product.neckType,
+      fit: product.fit,
+      pattern: product.pattern,
+      sareeLength: product.sareeLength,
+      blousePiece: product.blousePiece,
+      occasion: product.occasion,
+      washCare: product.washCare,
 
-        collarType: product.collarType,
-        hoodType: product.hoodType,
-        pocketType: product.pocketType,
-        waistType: product.waistType,
-        length: product.length,
-        stretchable: product.stretchable,
-        ageGroup: product.ageGroup,
-        kurtaLength: product.kurtaLength,
-        bottomType: product.bottomType,
-        dupattaIncluded: product.dupattaIncluded,
-        styleType: product.styleType,
-        waistRise: product.waistRise,
-        trendType: product.trendType,
-        brand: product.brand,
-        exportGrade: product.exportGrade,
-        condition: product.condition,
-        moq: product.moq,
-      }),
-    });
+      collarType: product.collarType,
+      hoodType: product.hoodType,
+      pocketType: product.pocketType,
+      waistType: product.waistType,
+      length: product.length,
+      stretchable: product.stretchable,
+      ageGroup: product.ageGroup,
+      kurtaLength: product.kurtaLength,
+      bottomType: product.bottomType,
+      dupattaIncluded: product.dupattaIncluded,
+      styleType: product.styleType,
+      waistRise: product.waistRise,
+      trendType: product.trendType,
+      brand: product.brand,
+      exportGrade: product.exportGrade,
+      condition: product.condition,
+      moq: product.moq,
+    };
 
-    const data = await response.json();
+    // ================= EDIT PRODUCT =================
+    if (editProduct && editProduct.id) {
 
-    if (!response.ok) {
-      alert(data.message || "Failed to add product");
-      return;
+      const response = await fetch(
+        `http://localhost:5000/api/products/${editProduct.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(productData),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || "Failed to update product");
+        return;
+      }
+
+      alert("Product updated successfully!");
+
+    } 
+    // ================= ADD PRODUCT =================
+    else {
+
+      const response = await fetch(
+        "http://localhost:5000/api/products",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(productData),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || "Failed to add product");
+        return;
+      }
+
+      alert("Product added successfully!");
     }
 
-    alert("Product added successfully!");
-
-    localStorage.removeItem("editProduct");
-
+    // Go back to dashboard
     navigate("/vendor-dashboard");
 
   } catch (error) {
-    console.error("❌ Add product error:", error);
+    console.error("❌ Product save error:", error);
     alert("Unable to connect to the backend.");
   }
 };
-
-const editProduct = 
-  JSON.parse(localStorage.getItem("editProduct")) || null;
 
   return (
     <div className="vendor-container">
@@ -148,12 +180,14 @@ const editProduct =
           type="text"
           name="name"
           placeholder="Product Name"
+          value={product.name || ""}
           onChange={handleChange}
           required
         />
        
         <select
             name="category"
+            value={product.category || ""}
             onChange={handleChange}
             required
         >
@@ -179,6 +213,7 @@ const editProduct =
       type="text"
       name="fabric"
       placeholder="Fabric (Cotton, Cotton Blend...)"
+      value={product.fabric ||""}
       onChange={handleChange}
       required
     />
@@ -187,6 +222,7 @@ const editProduct =
       type="text"
       name="gsm"
       placeholder="GSM (e.g. 180 GSM)"
+      value={product.gsm || ""}
       onChange={handleChange}
       required
     />
@@ -195,6 +231,7 @@ const editProduct =
       type="text"
       name="sleeveType"
       placeholder="Sleeve Type (Half Sleeve, Full Sleeve)"
+      value={product.sleeveType || ""}
       onChange={handleChange}
       required
     />
@@ -203,6 +240,7 @@ const editProduct =
       type="text"
       name="neckType"
       placeholder="Neck Type (Round Neck, Polo Neck)"
+      value={product.neckType || ""}
       onChange={handleChange}
       required
     />
@@ -211,6 +249,7 @@ const editProduct =
       type="text"
       name="fit"
       placeholder="Fit (Regular Fit, Oversized)"
+      value={product.fit ||""}
       onChange={handleChange}
       required
     />
@@ -219,6 +258,7 @@ const editProduct =
       type="text"
       name="pattern"
       placeholder="Pattern (Printed, Solid)"
+      value={product.pattern || ""}
       onChange={handleChange}
       required
     />
@@ -231,6 +271,7 @@ const editProduct =
       type="text"
       name="fabric"
       placeholder="Fabric (Premium Organza, Silk, Cotton...)"
+      value={product.fabric || ""}
       onChange={handleChange}
       required
     />
@@ -239,6 +280,7 @@ const editProduct =
       type="text"
       name="sareeLength"
       placeholder="Saree Length (e.g. 5.5 meters)"
+      value={product.sareeLength || ""}
       onChange={handleChange}
       required
     />
@@ -247,6 +289,7 @@ const editProduct =
       type="text"
       name="blousePiece"
       placeholder="Blouse Piece (Included / Not Included)"
+      value={product.blousePiece || ""}
       onChange={handleChange}
       required
     />
@@ -255,6 +298,7 @@ const editProduct =
       type="text"
       name="occasion"
       placeholder="Occasion (Wedding, Festive, Party)"
+      value={product.occasion || ""}
       onChange={handleChange}
       required
     />
@@ -263,6 +307,7 @@ const editProduct =
       type="text"
       name="washCare"
       placeholder="Wash Care (Dry Clean Recommended)"
+      value={product.washCare || ""}
       onChange={handleChange}
       required
     />
@@ -271,110 +316,500 @@ const editProduct =
       type="text"
       name="fit"
       placeholder="Fit / Draping Style"
+      value={product.fit || ""}
       onChange={handleChange}
       required
     />
   </>
 )}
 
-
 {product.category === "Shirts" && (
   <>
-    <input type="text" name="fabric" placeholder="Fabric" onChange={handleChange} required />
-    <input type="text" name="sleeveType" placeholder="Sleeve Type" onChange={handleChange} required />
-    <input type="text" name="collarType" placeholder="Collar Type" onChange={handleChange} required />
-    <input type="text" name="fit" placeholder="Fit" onChange={handleChange} required />
-    <input type="text" name="pattern" placeholder="Pattern" onChange={handleChange} required />
+    <input
+      type="text"
+      name="fabric"
+      placeholder="Fabric"
+      value={product.fabric || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="sleeveType"
+      placeholder="Sleeve Type"
+      value={product.sleeveType || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="collarType"
+      placeholder="Collar Type"
+      value={product.collarType || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="fit"
+      placeholder="Fit"
+      value={product.fit || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="pattern"
+      placeholder="Pattern"
+      value={product.pattern || ""}
+      onChange={handleChange}
+      required
+    />
   </>
 )}
 
 {product.category === "Hoodies" && (
   <>
-    <input type="text" name="fabric" placeholder="Fabric" onChange={handleChange} required />
-    <input type="text" name="gsm" placeholder="GSM" onChange={handleChange} required />
-    <input type="text" name="hoodType" placeholder="Hood Type" onChange={handleChange} required />
-    <input type="text" name="pocketType" placeholder="Pocket Type" onChange={handleChange} required />
-    <input type="text" name="fit" placeholder="Fit" onChange={handleChange} required />
+    <input
+      type="text"
+      name="fabric"
+      placeholder="Fabric"
+      value={product.fabric || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="gsm"
+      placeholder="GSM"
+      value={product.gsm || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="hoodType"
+      placeholder="Hood Type"
+      value={product.hoodType || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="pocketType"
+      placeholder="Pocket Type"
+      value={product.pocketType || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="fit"
+      placeholder="Fit"
+      value={product.fit || ""}
+      onChange={handleChange}
+      required
+    />
   </>
 )}
 
 {product.category === "Leggings" && (
   <>
-    <input type="text" name="fabric" placeholder="Fabric" onChange={handleChange} required />
-    <input type="text" name="waistType" placeholder="Waist Type" onChange={handleChange} required />
-    <input type="text" name="length" placeholder="Length" onChange={handleChange} required />
-    <input type="text" name="stretchable" placeholder="Stretchable (Yes/No)" onChange={handleChange} required />
-    <input type="text" name="fit" placeholder="Fit" onChange={handleChange} required />
+    <input
+      type="text"
+      name="fabric"
+      placeholder="Fabric"
+      value={product.fabric || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="waistType"
+      placeholder="Waist Type"
+      value={product.waistType || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="length"
+      placeholder="Length"
+      value={product.length || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="stretchable"
+      placeholder="Stretchable (Yes/No)"
+      value={product.stretchable || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="fit"
+      placeholder="Fit"
+      value={product.fit || ""}
+      onChange={handleChange}
+      required
+    />
   </>
 )}
 
 {product.category === "Kids Wear" && (
   <>
-    <input type="text" name="ageGroup" placeholder="Age Group" onChange={handleChange} required />
-    <input type="text" name="fabric" placeholder="Fabric" onChange={handleChange} required />
-    <input type="text" name="sleeveType" placeholder="Sleeve Type" onChange={handleChange} required />
-    <input type="text" name="pattern" placeholder="Pattern" onChange={handleChange} required />
-    <input type="text" name="fit" placeholder="Fit" onChange={handleChange} required />
+    <input
+      type="text"
+      name="ageGroup"
+      placeholder="Age Group"
+      value={product.ageGroup || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="fabric"
+      placeholder="Fabric"
+      value={product.fabric || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="sleeveType"
+      placeholder="Sleeve Type"
+      value={product.sleeveType || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="pattern"
+      placeholder="Pattern"
+      value={product.pattern || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="fit"
+      placeholder="Fit"
+      value={product.fit || ""}
+      onChange={handleChange}
+      required
+    />
   </>
 )}
 
 {product.category === "Kurta Set" && (
   <>
-    <input type="text" name="fabric" placeholder="Fabric" onChange={handleChange} required />
-    <input type="text" name="kurtaLength" placeholder="Kurta Length" onChange={handleChange} required />
-    <input type="text" name="bottomType" placeholder="Bottom Type" onChange={handleChange} required />
-    <input type="text" name="dupattaIncluded" placeholder="Dupatta Included (Yes/No)" onChange={handleChange} required />
-    <input type="text" name="occasion" placeholder="Occasion" onChange={handleChange} required />
+    <input
+      type="text"
+      name="fabric"
+      placeholder="Fabric"
+      value={product.fabric || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="kurtaLength"
+      placeholder="Kurta Length"
+      value={product.kurtaLength || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="bottomType"
+      placeholder="Bottom Type"
+      value={product.bottomType || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="dupattaIncluded"
+      placeholder="Dupatta Included (Yes/No)"
+      value={product.dupattaIncluded || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="occasion"
+      placeholder="Occasion"
+      value={product.occasion || ""}
+      onChange={handleChange}
+      required
+    />
   </>
 )}
 
 {product.category === "Korean Style" && (
   <>
-    <input type="text" name="fabric" placeholder="Fabric" onChange={handleChange} required />
-    <input type="text" name="styleType" placeholder="Style Type" onChange={handleChange} required />
-    <input type="text" name="fit" placeholder="Fit" onChange={handleChange} required />
-    <input type="text" name="pattern" placeholder="Pattern" onChange={handleChange} required />
-    <input type="text" name="occasion" placeholder="Occasion" onChange={handleChange} required />
+    <input
+      type="text"
+      name="fabric"
+      placeholder="Fabric"
+      value={product.fabric || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="styleType"
+      placeholder="Style Type"
+      value={product.styleType || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="fit"
+      placeholder="Fit"
+      value={product.fit || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="pattern"
+      placeholder="Pattern"
+      value={product.pattern || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="occasion"
+      placeholder="Occasion"
+      value={product.occasion || ""}
+      onChange={handleChange}
+      required
+    />
   </>
 )}
 
 {product.category === "Jeans" && (
   <>
-    <input type="text" name="fabric" placeholder="Fabric" onChange={handleChange} required />
-    <input type="text" name="waistRise" placeholder="Waist Rise" onChange={handleChange} required />
-    <input type="text" name="length" placeholder="Length" onChange={handleChange} required />
-    <input type="text" name="stretchable" placeholder="Stretchable (Yes/No)" onChange={handleChange} required />
-    <input type="text" name="fit" placeholder="Fit" onChange={handleChange} required />
+    <input
+      type="text"
+      name="fabric"
+      placeholder="Fabric"
+      value={product.fabric || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="waistRise"
+      placeholder="Waist Rise"
+      value={product.waistRise || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="length"
+      placeholder="Length"
+      value={product.length || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="stretchable"
+      placeholder="Stretchable (Yes/No)"
+      value={product.stretchable || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="fit"
+      placeholder="Fit"
+      value={product.fit || ""}
+      onChange={handleChange}
+      required
+    />
   </>
 )}
 
 {product.category === "Tops" && (
   <>
-    <input type="text" name="fabric" placeholder="Fabric" onChange={handleChange} required />
-    <input type="text" name="sleeveType" placeholder="Sleeve Type" onChange={handleChange} required />
-    <input type="text" name="neckType" placeholder="Neck Type" onChange={handleChange} required />
-    <input type="text" name="fit" placeholder="Fit" onChange={handleChange} required />
-    <input type="text" name="occasion" placeholder="Occasion" onChange={handleChange} required />
+    <input
+      type="text"
+      name="fabric"
+      placeholder="Fabric"
+      value={product.fabric || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="sleeveType"
+      placeholder="Sleeve Type"
+      value={product.sleeveType || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="neckType"
+      placeholder="Neck Type"
+      value={product.neckType || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="fit"
+      placeholder="Fit"
+      value={product.fit || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="occasion"
+      placeholder="Occasion"
+      value={product.occasion || ""}
+      onChange={handleChange}
+      required
+    />
   </>
 )}
 
 {product.category === "Current Trending" && (
   <>
-    <input type="text" name="trendType" placeholder="Trend Type" onChange={handleChange} required />
-    <input type="text" name="fabric" placeholder="Fabric" onChange={handleChange} required />
-    <input type="text" name="fit" placeholder="Fit" onChange={handleChange} required />
-    <input type="text" name="pattern" placeholder="Pattern" onChange={handleChange} required />
-    <input type="text" name="occasion" placeholder="Occasion" onChange={handleChange} required />
+    <input
+      type="text"
+      name="trendType"
+      placeholder="Trend Type"
+      value={product.trendType || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="fabric"
+      placeholder="Fabric"
+      value={product.fabric || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="fit"
+      placeholder="Fit"
+      value={product.fit || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="pattern"
+      placeholder="Pattern"
+      value={product.pattern || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="occasion"
+      placeholder="Occasion"
+      value={product.occasion || ""}
+      onChange={handleChange}
+      required
+    />
   </>
 )}
 
 {product.category === "Export Surplus" && (
   <>
-    <input type="text" name="brand" placeholder="Brand" onChange={handleChange} required />
-    <input type="text" name="fabric" placeholder="Fabric" onChange={handleChange} required />
-    <input type="text" name="exportGrade" placeholder="Export Grade" onChange={handleChange} required />
-    <input type="text" name="condition" placeholder="Condition (New / Surplus)" onChange={handleChange} required />
-    <input type="text" name="moq" placeholder="MOQ (Minimum Order Quantity)" onChange={handleChange} required />
+    <input
+      type="text"
+      name="brand"
+      placeholder="Brand"
+      value={product.brand || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="fabric"
+      placeholder="Fabric"
+      value={product.fabric || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="exportGrade"
+      placeholder="Export Grade"
+      value={product.exportGrade || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="condition"
+      placeholder="Condition (New / Surplus)"
+      value={product.condition || ""}
+      onChange={handleChange}
+      required
+    />
+
+    <input
+      type="text"
+      name="moq"
+      placeholder="MOQ (Minimum Order Quantity)"
+      value={product.moq || ""}
+      onChange={handleChange}
+      required
+    />
   </>
 )}
 
@@ -382,6 +817,7 @@ const editProduct =
           type="number"
           name="price"
           placeholder="Price (₹)"
+          value={product.price || ""}
           onChange={handleChange}
           required
         />
@@ -390,6 +826,7 @@ const editProduct =
           type="number"
           name="stock"
           placeholder="Stock"
+          value={product.stock || ""}
           onChange={handleChange}
           required
         />
@@ -397,13 +834,14 @@ const editProduct =
         <textarea
           name="description"
           placeholder="Product Description"
+          value={product.description || ""}
           onChange={handleChange}
           required
         ></textarea>
 
         <input
           type="file"
-          accept="image/* "
+          accept="image/* "          
           onChange={handleImage}
           required={!editProduct}
         />
