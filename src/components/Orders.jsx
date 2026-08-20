@@ -19,7 +19,7 @@ function Orders() {
 
       try {
         const response = await fetch(
-          `http://localhost:5000/api/orders/vendor/${vendorId}`
+          `https://tirupur-fashion-hub.onrender.com/api/orders/vendor/${vendorId}`
         );
 
         const data = await response.json();
@@ -43,7 +43,7 @@ function Orders() {
   const updateStatus = async (orderId, status) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/orders/${orderId}`,
+        `https://tirupur-fashion-hub.onrender.com/api/orders/${orderId}`,
         {
           method: "PUT",
           headers: {

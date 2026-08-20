@@ -54,7 +54,7 @@ const handleSubmit = async (e) => {
 
   try {
     const response = await fetch(
-      "http://localhost:5000/api/vendor-register",
+      "https://tirupur-fashion-hub.onrender.com/api/vendor-register",
       {
         method: "POST",
         headers: {

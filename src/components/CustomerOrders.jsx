@@ -18,7 +18,7 @@ function CustomerOrders() {
 
       try {
         const response = await fetch(
-          `http://localhost:5000/api/orders/customer/${customerId}`
+          `https://tirupur-fashion-hub.onrender.com/api/orders/customer/${customerId}`
         );
 
         const data = await response.json();

@@ -17,7 +17,7 @@ function Inventory() {
 
       try {
         const response = await fetch(
-          `http://localhost:5000/api/products/vendor/${vendorId}`
+          `https://tirupur-fashion-hub.onrender.com/api/products/vendor/${vendorId}`
         );
 
         const data = await response.json();
@@ -44,7 +44,7 @@ function Inventory() {
       if (!product) return;
 
       const response = await fetch(
-        `http://localhost:5000/api/products/${productId}`,
+        `https://tirupur-fashion-hub.onrender.com/api/products/${productId}`,
         {
           method: "PUT",
           headers: {

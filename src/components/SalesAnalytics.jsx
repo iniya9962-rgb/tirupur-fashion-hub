@@ -18,7 +18,7 @@ function SalesAnalytics() {
 
       try {
         const response = await fetch(
-          `http://localhost:5000/api/orders/vendor/${vendorId}`
+          `https://tirupur-fashion-hub.onrender.com/api/orders/vendor/${vendorId}`
         );
 
         const data = await response.json();

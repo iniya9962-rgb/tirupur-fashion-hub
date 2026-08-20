@@ -116,7 +116,7 @@ function AddProduct() {
     if (editProduct && editProduct.id) {
 
       const response = await fetch(
-        `http://localhost:5000/api/products/${editProduct.id}`,
+        `https://tirupur-fashion-hub.onrender.com/api/products/${editProduct.id}`,
         {
           method: "PUT",
           headers: {
@@ -140,7 +140,7 @@ function AddProduct() {
     else {
 
       const response = await fetch(
-        "http://localhost:5000/api/products",
+        "https://tirupur-fashion-hub.onrender.com/api/products",
         {
           method: "POST",
           headers: {
