@@ -1,4 +1,5 @@
 import {useNavigate} from "react-router-dom";
+import { sendVendorOrderEmail } from "../utils/sendVendorOrderEmail";
 
 function Cart({ cartItems, removeFromCart, clearCart }) {
   const navigate = useNavigate();
@@ -17,6 +18,8 @@ function Cart({ cartItems, removeFromCart, clearCart }) {
       // Place orders through backend
       for (const item of cartItems) {
         const vendorId = item.vendorId ?? item.vendor_id;
+        const vendorEmail = item.vendorEmail ?? item.vendor_email;
+        const vendorName = item.vendorName ?? item.vendor_name;
 
         if (!vendorId) {
           alert(`The product "${item.name}" is not linked to a vendor.`);
@@ -29,6 +32,8 @@ function Cart({ cartItems, removeFromCart, clearCart }) {
           customerName: user.name,
           customerPhone: user.phone || "",
           vendorId,
+          vendorEmail,
+          vendorName,
           productId: item.id,
           productName: item.name,
           category: item.category,
@@ -51,6 +56,21 @@ function Cart({ cartItems, removeFromCart, clearCart }) {
         if (!response.ok) {
           alert(data.message || "Failed to place order");
           return;
+        }
+
+        try {
+          await sendVendorOrderEmail({
+            vendorEmail,
+            vendorName,
+            productName: item.name,
+            customerName: user.name,
+            customerEmail: user.email,
+            quantity: item.quantity || 1,
+            price: item.price,
+            status: "Pending",
+          });
+        } catch (emailError) {
+          console.error("Vendor notification email failed:", emailError);
         }
       }
 

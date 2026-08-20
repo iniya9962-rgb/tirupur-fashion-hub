@@ -20,6 +20,7 @@ import SalesAnalytics from "./components/SalesAnalytics";
 import OrderSuccess from "./components/OrderSuccess";
 import CustomerOrders from "./components/CustomerOrders";
 import About from "./components/About";
+import { sendVendorOrderEmail } from "./utils/sendVendorOrderEmail";
 
 function App() {
   const navigate = useNavigate();
@@ -48,6 +49,8 @@ function App() {
 
   try {
     const vendorId = product.vendorId ?? product.vendor_id;
+    const vendorEmail = product.vendorEmail ?? product.vendor_email;
+    const vendorName = product.vendorName ?? product.vendor_name;
 
     if (!vendorId) {
       alert("This product is not linked to a vendor.");
@@ -60,6 +63,8 @@ function App() {
       customerName: user.name,
       customerPhone: user.phone || "",
       vendorId,
+      vendorEmail,
+      vendorName,
       productId: product.id,
       productName: product.name,
       category: product.category,
@@ -82,6 +87,21 @@ function App() {
     if (!response.ok) {
       alert(data.message || "Failed to place order");
       return;
+    }
+
+    try {
+      await sendVendorOrderEmail({
+        vendorEmail,
+        vendorName,
+        productName: product.name,
+        customerName: user.name,
+        customerEmail: user.email,
+        quantity: 1,
+        price: product.price,
+        status: "Pending",
+      });
+    } catch (emailError) {
+      console.error("Vendor notification email failed:", emailError);
     }
 
     alert("Order placed successfully!");
