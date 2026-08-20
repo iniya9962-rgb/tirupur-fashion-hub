@@ -1,4 +1,14 @@
 User-agent: *
 Allow: /
 
+Disallow: /login
+Disallow: /signup
+Disallow: /cart
+Disallow: /my-orders
+Disallow: /order-success
+Disallow: /vendor-login
+Disallow: /vendor-registration
+Disallow: /vendor-dashboard
+Disallow: /vendor/
+
 Sitemap: https://tirupur-fashion-hub-frontend.onrender.com/sitemap.xml
