@@ -210,7 +210,7 @@ function App() {
                 <h2>All Products</h2>
 
                 <ProductList
-                  selectedCategory="All"
+                  selectedCategory={selectedCategory}
                   searchTerm={searchTerm}
                   addToCart={addToCart}
                   buyNow={buyNow}
