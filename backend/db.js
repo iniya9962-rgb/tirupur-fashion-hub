@@ -1,21 +1,26 @@
-/* eslint-disable no-undef*/
+/* eslint-disable no-undef */
 
 const mysql = require("mysql2");
 
 const db = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "admin",
-    database: "tirupur_fashion_hub"
+    host: "tirupur-fashion-hub-iniya9962-3f36.f.aivencloud.com",
+    port: 21317,
+    user: "avnadmin",
+    password: process.env.DB_PASSWORD,
+    database: "defaultdb",
+    ssl: {
+        rejectUnauthorized: true,
+        ca: require("fs").readFileSync("./aiven-ca.pem")
+    }
 });
 
 db.connect((err) => {
     if (err) {
-        console.error("❌ MySQL connection failed:", err.message);
+        console.error("❌ Aiven MySQL connection failed:", err.message);
         return;
     }
 
-    console.log("✅ MySQL connected successfully!");
+    console.log("✅ Aiven MySQL connected successfully!");
 });
 
 module.exports = db;
