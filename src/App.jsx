@@ -47,12 +47,19 @@ function App() {
   }
 
   try {
+    const vendorId = product.vendorId ?? product.vendor_id;
+
+    if (!vendorId) {
+      alert("This product is not linked to a vendor.");
+      return;
+    }
+
     const orderData = {
       customerId: parseInt(customerId),
       customerEmail: user.email,
       customerName: user.name,
       customerPhone: user.phone || "",
-      vendorId: product.vendorId || 1,
+      vendorId,
       productId: product.id,
       productName: product.name,
       category: product.category,

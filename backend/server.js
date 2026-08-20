@@ -704,13 +704,14 @@ app.get("/api/orders/vendor/:vendorId", (req, res) => {
     const { vendorId } = req.params;
 
     const sql = `
-        SELECT *
-        FROM orders
-        WHERE vendor_id = ?
-        ORDER BY id DESC
+        SELECT o.*
+        FROM orders o
+        LEFT JOIN products p ON p.id = o.product_id
+        WHERE o.vendor_id = ? OR p.vendor_id = ?
+        ORDER BY o.id DESC
     `;
 
-    db.query(sql, [vendorId], (err, results) => {
+    db.query(sql, [vendorId, vendorId], (err, results) => {
         if (err) {
             console.error("❌ Get vendor orders error:", err.message);
 

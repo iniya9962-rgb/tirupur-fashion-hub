@@ -16,12 +16,19 @@ function Cart({ cartItems, removeFromCart, clearCart }) {
     try {
       // Place orders through backend
       for (const item of cartItems) {
+        const vendorId = item.vendorId ?? item.vendor_id;
+
+        if (!vendorId) {
+          alert(`The product "${item.name}" is not linked to a vendor.`);
+          return;
+        }
+
         const orderData = {
           customerId: parseInt(customerId),
           customerEmail: user.email,
           customerName: user.name,
           customerPhone: user.phone || "",
-          vendorId: item.vendorId || 1,
+          vendorId,
           productId: item.id,
           productName: item.name,
           category: item.category,
