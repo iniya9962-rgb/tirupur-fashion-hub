@@ -31,14 +31,27 @@ function ProductList({
     }, []);
 
     const allProducts = [...products, ...vendorProducts];
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+
   const filteredProducts = allProducts.filter((product) => {
     const matchesCategory =
-      selectedCategory === "All" || 
-      product.category === selectedCategory;
+      selectedCategory === "All" ||
+      product.category?.toLowerCase() === selectedCategory.toLowerCase();
 
-    const matchesSearch = product.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+    const searchableText = [
+      product.name,
+      product.category,
+      product.description,
+      product.fabric,
+      product.pattern,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    const matchesSearch =
+      normalizedSearch === "" || searchableText.includes(normalizedSearch);
+
     return matchesCategory && matchesSearch;
   });
    
