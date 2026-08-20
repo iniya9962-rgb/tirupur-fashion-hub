@@ -12,7 +12,7 @@ const db = mysql.createConnection({
     database: "defaultdb",
     ssl: {
         rejectUnauthorized: true,
-        ca: require("fs").readFileSync(__dirname + "./aiven-ca.pem")
+        ca: require("fs").readFileSync(__dirname + "/aiven-ca.pem")
     }
 });
 
