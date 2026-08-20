@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://tirupur-fashion-hub-frontend.onrender.com/sitemap.xml
